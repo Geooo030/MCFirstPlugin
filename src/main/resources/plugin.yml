@@ -1,0 +1,10 @@
+name: FirstPlugin
+version: '${project.version}'
+main: org.geo.firstplugin.FirstPlugin
+commands:
+  copy:
+    description: This is a test command
+    usage: /<command>
+#    permission: test.use
+#    permission-message: §aU dont have permission!!
+
