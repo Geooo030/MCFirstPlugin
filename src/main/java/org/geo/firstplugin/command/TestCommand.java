@@ -14,33 +14,59 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class TestCommand implements CommandExecutor {
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
-        String amount = strings[0];
-        Integer nums = 1;
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "Only player can use this command！");
+            return true;
+        }
+
+        if (args.length != 1) {
+            sender.sendMessage(ChatColor.RED + "usage: /copy <number>");
+            return true;
+        }
+
+        Player player = (Player) sender;
+        int amount;
+
         try {
-            nums = Integer.parseInt(amount);
-        }catch (Exception e) {
-            commandSender.sendMessage(ChatColor.RED + "参数错误");
-            return false;
+            amount = Integer.parseInt(args[0]);
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "{argument} must be a number！");
+            return true;
         }
 
-        if (commandSender instanceof Player) {
-            Player player = (Player) commandSender;
-            PlayerInventory inventory = player.getInventory();
-            ItemStack itemStack = inventory.getItemInMainHand();
-            if (itemStack.getType().equals(Material.AIR)) {
-                commandSender.sendMessage(ChatColor.RED + "你不能复制：" + itemStack.getType().toString() + "!!!");
-                return false;
-            }
-            Bukkit.getConsoleSender().sendMessage("§aUser -> " + commandSender + " copy the item: " + itemStack.toString());
-            commandSender.sendMessage(ChatColor.GREEN + "你复制了物品：" + itemStack.toString());
-            ItemStack clone = itemStack.clone();
-            clone.setAmount(64 * nums);
-            player.getWorld().dropItem(player.getLocation(), clone);
-
+        if (amount <= 0) {
+            sender.sendMessage(ChatColor.RED + "Argument must large than 0！");
+            return true;
         }
 
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+
+        if (itemInHand == null) {
+            sender.sendMessage(ChatColor.RED +"You dont have anything in your hand！");
+            return true;
+        }
+
+        Material itemType = itemInHand.getType();
+
+        // 
+        if (isOre(itemType)) {
+            // 
+            ItemStack copiedItem = itemInHand.clone();
+            copiedItem.setAmount(amount);
+
+            player.getWorld().dropItem(player.getLocation(), copiedItem);
+
+            sender.sendMessage(ChatColor.GREEN + "Copy Item Successfully！ item : " + copiedItem.toString());
+        } else {
+            sender.sendMessage(ChatColor.RED +"Only Ore can be copied！！");
+        }
 
         return true;
+    }
+
+    private boolean isOre(Material material) {
+        // 通过检查物品类型是否继承自矿物来判断
+        return material.isBlock() && material.name().endsWith("_ORE");
     }
 }
